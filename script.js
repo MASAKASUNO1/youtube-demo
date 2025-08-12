@@ -55,7 +55,9 @@
       cells.push({ day: d, dateStr, other: false });
     }
 
-    const remaining = 42 - cells.length;
+    const rows = Math.ceil((firstDayIdx + totalDays) / 7);
+    const totalCells = rows * 7;
+    const remaining = totalCells - cells.length;
     const nextMonth = state.month === 11 ? 0 : state.month + 1;
     const nextYear = state.month === 11 ? state.year + 1 : state.year;
     for (let d = 1; d <= remaining; d++) {
