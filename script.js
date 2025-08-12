@@ -70,6 +70,7 @@
       state.year === now.getFullYear() && state.month === now.getMonth();
 
     const frag = document.createDocumentFragment();
+    const createdCells = [];
 
     for (let i = 0; i < cells.length; i += 7) {
       const rowIndex = Math.floor(i / 7) + 1; // 1-based
@@ -83,7 +84,7 @@
         const cell = document.createElement('div');
         cell.className = 'day' + (other ? ' other-month' : '');
         cell.setAttribute('role', 'gridcell');
-        cell.setAttribute('tabindex', '0');
+        cell.setAttribute('tabindex', '-1');
         cell.setAttribute('aria-rowindex', String(rowIndex));
         cell.setAttribute('aria-colindex', String(colIndex));
         cell.dataset.date = dateStr;
@@ -110,15 +111,39 @@
           cell.classList.add('selected');
           cell.setAttribute('aria-selected', 'true');
           state.selectedDate = dateStr;
+
+          const prevTab = daysEl.querySelector('.day[tabindex="0"]');
+          if (prevTab && prevTab !== cell) prevTab.setAttribute('tabindex', '-1');
+          cell.setAttribute('tabindex', '0');
+          cell.focus();
         });
 
         row.appendChild(cell);
+        createdCells.push(cell);
       }
 
       frag.appendChild(row);
     }
 
-    daysEl.appendChild(frag);
+        // Roving tabindex: set a single tabbable cell (selected > today > first of current month)
+    let focusIndex = -1;
+    if (state.selectedDate) {
+      focusIndex = cells.findIndex((c) => c.dateStr === state.selectedDate);
+    }
+    if (focusIndex === -1) {
+      const now = new Date();
+      const isCurrentMonthVisible = state.year === now.getFullYear() && state.month === now.getMonth();
+      if (isCurrentMonthVisible) {
+        focusIndex = cells.findIndex((c) => !c.other && c.day === now.getDate());
+      }
+    }
+    if (focusIndex === -1) {
+      focusIndex = cells.findIndex((c) => !c.other);
+    }
+    if (focusIndex < 0) focusIndex = 0;
+    createdCells.forEach((el, i) => { el.setAttribute('tabindex', i === focusIndex ? '0' : '-1'); });
+
+daysEl.appendChild(frag);
 
   }
 
@@ -153,12 +178,43 @@
     prevBtn.addEventListener('click', prevMonth);
     nextBtn.addEventListener('click', nextMonth);
     todayBtn.addEventListener('click', goToToday);
+    // Grid keyboard navigation (Arrow keys to move, Enter/Space to select)
+    daysEl.addEventListener('keydown', (e) => {
+      const active = document.activeElement;
+      if (!daysEl.contains(active)) return;
+      const cells = Array.from(daysEl.querySelectorAll('.day'));
+      const idx = cells.indexOf(active);
+      if (idx === -1) return;
+      const move = (delta) => {
+        let t = idx + delta;
+        if (t < 0) t = 0;
+        if (t >= cells.length) t = cells.length - 1;
+        const target = cells[t];
+        if (target) {
+          active.setAttribute('tabindex', '-1');
+          target.setAttribute('tabindex', '0');
+          target.focus();
+        }
+      };
+      switch (e.key) {
+        case 'ArrowLeft': e.preventDefault(); move(-1); break;
+        case 'ArrowRight': e.preventDefault(); move(1); break;
+        case 'ArrowUp': e.preventDefault(); move(-7); break;
+        case 'ArrowDown': e.preventDefault(); move(7); break;
+        case 'Enter': case ' ': case 'Spacebar': e.preventDefault(); active.click(); break;
+      }
+    });
 
+
+        // Month navigation only when focus is outside the grid
     document.addEventListener('keydown', (e) => {
+      const inGrid = daysEl.contains(document.activeElement);
+      if (inGrid && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return;
       if (e.key === 'ArrowLeft') prevMonth();
       else if (e.key === 'ArrowRight') nextMonth();
-      else if (e.key.toLowerCase() === 't') goToToday();
+      else if (String(e.key).toLowerCase() === 't') goToToday();
     });
+
 
     renderCalendar();
   }
