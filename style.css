@@ -1,0 +1,163 @@
+:root {
+  --bg: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --accent: #2563eb;
+  --today-bg: #e0ecff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", "YuGothic", Meiryo, sans-serif;
+  line-height: 1.4;
+}
+
+.calendar-wrapper {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.app-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.app-title {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+}
+
+.controls button {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  line-height: 1;
+  min-width: 44px; /* tap target */
+  min-height: 40px; /* tap target */
+  cursor: pointer;
+}
+
+.controls button:hover {
+  background: #f8fafc;
+}
+
+.controls button:active {
+  background: #f1f5f9;
+}
+
+.month-year {
+  font-weight: 600;
+  font-size: 1.125rem;
+}
+
+.calendar {
+  margin-top: 12px;
+}
+
+.weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+}
+
+.weekdays > div {
+  padding: 6px 0;
+}
+
+.days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--text);
+  font-size: 1rem;
+  aspect-ratio: 1 / 1;
+  user-select: none;
+  cursor: pointer;
+}
+
+.day[role="gridcell"] {
+  /* helps VoiceOver/NVDA read them as cells */
+}
+
+.day:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.day:hover {
+  background: #f9fafb;
+}
+
+.other-month {
+  color: var(--muted);
+  background: #fafafa;
+}
+
+.today {
+  background: var(--today-bg);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.selected {
+  background: #e5f0ff;
+  border-color: var(--accent);
+}
+
+@media (max-width: 480px) {
+  .calendar-wrapper {
+    padding: 12px;
+  }
+  .app-title {
+    font-size: 1.1rem;
+  }
+  .controls {
+    gap: 6px;
+  }
+  .controls button {
+    padding: 8px 10px;
+    min-height: 40px;
+    font-size: 0.95rem;
+  }
+  .weekdays {
+    gap: 4px;
+    font-size: 0.85rem;
+  }
+  .days {
+    gap: 4px;
+  }
+}
