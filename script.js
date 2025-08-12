@@ -71,29 +71,55 @@
 
     const frag = document.createDocumentFragment();
 
-    cells.forEach(({ day, dateStr, other }) => {
-      const cell = document.createElement('div');
-      cell.className = 'day' + (other ? ' other-month' : '');
-      cell.setAttribute('role', 'gridcell');
-      cell.setAttribute('tabindex', '0');
-      cell.dataset.date = dateStr;
-      cell.textContent = String(day);
+    for (let i = 0; i < cells.length; i += 7) {
+      const rowIndex = Math.floor(i / 7) + 1; // 1-based
+      const row = document.createElement('div');
+      row.setAttribute('role', 'row');
+      row.setAttribute('aria-rowindex', String(rowIndex));
 
-      if (isCurrentMonthVisible && !other && day === now.getDate()) {
-        cell.classList.add('today');
+      for (let j = 0; j < 7; j++) {
+        const { day, dateStr, other } = cells[i + j];
+        const colIndex = j + 1; // 1-based
+        const cell = document.createElement('div');
+        cell.className = 'day' + (other ? ' other-month' : '');
+        cell.setAttribute('role', 'gridcell');
+        cell.setAttribute('tabindex', '0');
+        cell.setAttribute('aria-rowindex', String(rowIndex));
+        cell.setAttribute('aria-colindex', String(colIndex));
+        cell.dataset.date = dateStr;
+        cell.textContent = String(day);
+
+        if (isCurrentMonthVisible && !other && day === now.getDate()) {
+          cell.classList.add('today');
+          cell.setAttribute('aria-current', 'date');
+        }
+
+        if (state.selectedDate === dateStr) {
+          cell.classList.add('selected');
+          cell.setAttribute('aria-selected', 'true');
+        } else {
+          cell.removeAttribute('aria-selected');
+        }
+
+        cell.addEventListener('click', () => {
+          const prevSel = daysEl.querySelector('.day.selected');
+          if (prevSel) {
+            prevSel.classList.remove('selected');
+            prevSel.removeAttribute('aria-selected');
+          }
+          cell.classList.add('selected');
+          cell.setAttribute('aria-selected', 'true');
+          state.selectedDate = dateStr;
+        });
+
+        row.appendChild(cell);
       }
 
-      cell.addEventListener('click', () => {
-        const prevSel = daysEl.querySelector('.day.selected');
-        if (prevSel) prevSel.classList.remove('selected');
-        cell.classList.add('selected');
-        state.selectedDate = dateStr;
-      });
-
-      frag.appendChild(cell);
-    });
+      frag.appendChild(row);
+    }
 
     daysEl.appendChild(frag);
+
   }
 
   function prevMonth() {
