@@ -37,6 +37,35 @@
         </div>
         <div id="days" class="days" role="grid" aria-readonly="true"></div>
       </section>
+
+      <section id="eventPanel" class="event-panel" aria-live="polite">
+        <div class="event-panel-header">
+          <h3 id="eventPanelTitle">選択された日付の予定</h3>
+          <button id="addEventBtn" type="button" class="add-event-btn">予定を追加</button>
+        </div>
+        <div id="eventList"></div>
+      </section>
+    </div>
+
+    <div id="eventModal" class="modal" aria-hidden="true">
+      <div class="modal-backdrop" id="eventModalBackdrop"></div>
+      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="eventModalTitle">
+        <h2 id="eventModalTitle">予定を追加</h2>
+        <form id="eventForm">
+          <input type="hidden" name="date" id="eventDate" />
+          <label>タイトル
+            <input id="eventTitle" name="title" required maxlength="100" />
+          </label>
+          <label>時刻
+            <input id="eventTime" name="time" type="time" />
+          </label>
+          <div class="modal-actions">
+            <button type="submit">追加</button>
+            <button type="button" id="eventCancel">キャンセル</button>
+          </div>
+        </form>
+      </div>
     </div>
   </body>
 </html>
+
