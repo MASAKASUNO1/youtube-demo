@@ -1,0 +1,42 @@
+<!--
+  Lightweight Calendar App
+  - Opening /index.html in a browser will run the app (no build step required).
+  - All files live at repository root: /index.html, /style.css, /script.js
+  - Note: /style.css and /script.js must exist (linked below).
+-->
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>軽量カレンダー</title>
+    <link rel="stylesheet" href="./style.css" />
+    <script src="./script.js" defer></script>
+  </head>
+  <body>
+    <div class="calendar-wrapper">
+      <header class="app-header">
+        <h1 class="app-title">カレンダー</h1>
+        <div class="controls" aria-label="カレンダー操作">
+          <button id="prevBtn" aria-label="前の月へ">←</button>
+          <button id="todayBtn" aria-label="今日へ">今日</button>
+          <button id="nextBtn" aria-label="次の月へ">→</button>
+        </div>
+        <div id="monthYear" class="month-year" aria-live="polite"></div>
+      </header>
+
+      <section class="calendar" aria-label="月表示カレンダー">
+        <div class="weekdays">
+          <div role="columnheader" aria-label="日曜日">日</div>
+          <div role="columnheader" aria-label="月曜日">月</div>
+          <div role="columnheader" aria-label="火曜日">火</div>
+          <div role="columnheader" aria-label="水曜日">水</div>
+          <div role="columnheader" aria-label="木曜日">木</div>
+          <div role="columnheader" aria-label="金曜日">金</div>
+          <div role="columnheader" aria-label="土曜日">土</div>
+        </div>
+        <div id="days" class="days" role="grid" aria-readonly="true"></div>
+      </section>
+    </div>
+  </body>
+</html>
