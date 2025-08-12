@@ -9,8 +9,9 @@
     return;
   }
 
-  const today = new Date();
-  const state = { year: today.getFullYear(), month: today.getMonth() };
+  // Use load-time date only for initializing state; compute current date dynamically elsewhere
+  const initialToday = new Date();
+  const state = { year: initialToday.getFullYear(), month: initialToday.getMonth(), selectedDate: null };
 
   function daysInMonth(year, month) {
     return new Date(year, month + 1, 0).getDate();
@@ -62,8 +63,9 @@
       cells.push({ day: d, dateStr, other: true });
     }
 
+    const now = new Date();
     const isCurrentMonthVisible =
-      state.year === today.getFullYear() && state.month === today.getMonth();
+      state.year === now.getFullYear() && state.month === now.getMonth();
 
     const frag = document.createDocumentFragment();
 
@@ -75,7 +77,7 @@
       cell.dataset.date = dateStr;
       cell.textContent = String(day);
 
-      if (isCurrentMonthVisible && !other && day === today.getDate()) {
+      if (isCurrentMonthVisible && !other && day === now.getDate()) {
         cell.classList.add('today');
       }
 
@@ -83,6 +85,7 @@
         const prevSel = daysEl.querySelector('.day.selected');
         if (prevSel) prevSel.classList.remove('selected');
         cell.classList.add('selected');
+        state.selectedDate = dateStr;
       });
 
       frag.appendChild(cell);
@@ -112,8 +115,9 @@
   }
 
   function goToToday() {
-    state.year = today.getFullYear();
-    state.month = today.getMonth();
+    const now = new Date();
+    state.year = now.getFullYear();
+    state.month = now.getMonth();
     renderCalendar();
   }
 
