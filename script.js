@@ -9,8 +9,9 @@
     return;
   }
 
-  const today = new Date();
-  const state = { year: today.getFullYear(), month: today.getMonth() };
+  // Use load-time date only for initializing state; compute current date dynamically elsewhere
+  const initialToday = new Date();
+  const state = { year: initialToday.getFullYear(), month: initialToday.getMonth(), selectedDate: null };
 
   function daysInMonth(year, month) {
     return new Date(year, month + 1, 0).getDate();
@@ -54,7 +55,9 @@
       cells.push({ day: d, dateStr, other: false });
     }
 
-    const remaining = 42 - cells.length;
+    const rows = Math.ceil((firstDayIdx + totalDays) / 7);
+    const totalCells = rows * 7;
+    const remaining = totalCells - cells.length;
     const nextMonth = state.month === 11 ? 0 : state.month + 1;
     const nextYear = state.month === 11 ? state.year + 1 : state.year;
     for (let d = 1; d <= remaining; d++) {
@@ -62,33 +65,86 @@
       cells.push({ day: d, dateStr, other: true });
     }
 
+    const now = new Date();
     const isCurrentMonthVisible =
-      state.year === today.getFullYear() && state.month === today.getMonth();
+      state.year === now.getFullYear() && state.month === now.getMonth();
 
     const frag = document.createDocumentFragment();
+    const createdCells = [];
 
-    cells.forEach(({ day, dateStr, other }) => {
-      const cell = document.createElement('div');
-      cell.className = 'day' + (other ? ' other-month' : '');
-      cell.setAttribute('role', 'gridcell');
-      cell.setAttribute('tabindex', '0');
-      cell.dataset.date = dateStr;
-      cell.textContent = String(day);
+    for (let i = 0; i < cells.length; i += 7) {
+      const rowIndex = Math.floor(i / 7) + 1; // 1-based
+      const row = document.createElement('div');
+      row.setAttribute('role', 'row');
+      row.setAttribute('aria-rowindex', String(rowIndex));
 
-      if (isCurrentMonthVisible && !other && day === today.getDate()) {
-        cell.classList.add('today');
+      for (let j = 0; j < 7; j++) {
+        const { day, dateStr, other } = cells[i + j];
+        const colIndex = j + 1; // 1-based
+        const cell = document.createElement('div');
+        cell.className = 'day' + (other ? ' other-month' : '');
+        cell.setAttribute('role', 'gridcell');
+        cell.setAttribute('tabindex', '-1');
+        cell.setAttribute('aria-rowindex', String(rowIndex));
+        cell.setAttribute('aria-colindex', String(colIndex));
+        cell.dataset.date = dateStr;
+        cell.textContent = String(day);
+
+        if (isCurrentMonthVisible && !other && day === now.getDate()) {
+          cell.classList.add('today');
+          cell.setAttribute('aria-current', 'date');
+        }
+
+        if (state.selectedDate === dateStr) {
+          cell.classList.add('selected');
+          cell.setAttribute('aria-selected', 'true');
+        } else {
+          cell.removeAttribute('aria-selected');
+        }
+
+        cell.addEventListener('click', () => {
+          const prevSel = daysEl.querySelector('.day.selected');
+          if (prevSel) {
+            prevSel.classList.remove('selected');
+            prevSel.removeAttribute('aria-selected');
+          }
+          cell.classList.add('selected');
+          cell.setAttribute('aria-selected', 'true');
+          state.selectedDate = dateStr;
+
+          const prevTab = daysEl.querySelector('.day[tabindex="0"]');
+          if (prevTab && prevTab !== cell) prevTab.setAttribute('tabindex', '-1');
+          cell.setAttribute('tabindex', '0');
+          cell.focus();
+        });
+
+        row.appendChild(cell);
+        createdCells.push(cell);
       }
 
-      cell.addEventListener('click', () => {
-        const prevSel = daysEl.querySelector('.day.selected');
-        if (prevSel) prevSel.classList.remove('selected');
-        cell.classList.add('selected');
-      });
+      frag.appendChild(row);
+    }
 
-      frag.appendChild(cell);
-    });
+        // Roving tabindex: set a single tabbable cell (selected > today > first of current month)
+    let focusIndex = -1;
+    if (state.selectedDate) {
+      focusIndex = cells.findIndex((c) => c.dateStr === state.selectedDate);
+    }
+    if (focusIndex === -1) {
+      const now = new Date();
+      const isCurrentMonthVisible = state.year === now.getFullYear() && state.month === now.getMonth();
+      if (isCurrentMonthVisible) {
+        focusIndex = cells.findIndex((c) => !c.other && c.day === now.getDate());
+      }
+    }
+    if (focusIndex === -1) {
+      focusIndex = cells.findIndex((c) => !c.other);
+    }
+    if (focusIndex < 0) focusIndex = 0;
+    createdCells.forEach((el, i) => { el.setAttribute('tabindex', i === focusIndex ? '0' : '-1'); });
 
-    daysEl.appendChild(frag);
+daysEl.appendChild(frag);
+
   }
 
   function prevMonth() {
@@ -112,8 +168,9 @@
   }
 
   function goToToday() {
-    state.year = today.getFullYear();
-    state.month = today.getMonth();
+    const now = new Date();
+    state.year = now.getFullYear();
+    state.month = now.getMonth();
     renderCalendar();
   }
 
@@ -121,15 +178,72 @@
     prevBtn.addEventListener('click', prevMonth);
     nextBtn.addEventListener('click', nextMonth);
     todayBtn.addEventListener('click', goToToday);
+    // Grid keyboard navigation (Arrow keys to move, Enter/Space to select)
+    daysEl.addEventListener('keydown', (e) => {
+      const active = document.activeElement;
+      if (!daysEl.contains(active)) return;
+      const cells = Array.from(daysEl.querySelectorAll('.day'));
+      const idx = cells.indexOf(active);
+      if (idx === -1) return;
+      const move = (delta) => {
+        let t = idx + delta;
+        if (t < 0) t = 0;
+        if (t >= cells.length) t = cells.length - 1;
+        const target = cells[t];
+        if (target) {
+          active.setAttribute('tabindex', '-1');
+          target.setAttribute('tabindex', '0');
+          target.focus();
+        }
+      };
+      switch (e.key) {
+        case 'ArrowLeft': e.preventDefault(); move(-1); break;
+        case 'ArrowRight': e.preventDefault(); move(1); break;
+        case 'ArrowUp': e.preventDefault(); move(-7); break;
+        case 'ArrowDown': e.preventDefault(); move(7); break;
+        case 'Enter': case ' ': case 'Spacebar': e.preventDefault(); active.click(); break;
+      }
+    });
 
+
+        // Month navigation only when focus is outside the grid
     document.addEventListener('keydown', (e) => {
+      const inGrid = daysEl.contains(document.activeElement);
+      if (inGrid && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return;
       if (e.key === 'ArrowLeft') prevMonth();
       else if (e.key === 'ArrowRight') nextMonth();
-      else if (e.key.toLowerCase() === 't') goToToday();
+      else if (String(e.key).toLowerCase() === 't') goToToday();
     });
+
 
     renderCalendar();
   }
 
   init();
 })();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

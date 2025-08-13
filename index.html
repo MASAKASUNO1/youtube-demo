@@ -18,14 +18,14 @@
       <header class="app-header">
         <h1 class="app-title">カレンダー</h1>
         <div class="controls" aria-label="カレンダー操作">
-          <button id="prevBtn" aria-label="前の月へ">←</button>
-          <button id="todayBtn" aria-label="今日へ">今日</button>
-          <button id="nextBtn" aria-label="次の月へ">→</button>
+          <button id="prevBtn" type="button" aria-label="前の月へ">←</button>
+          <button id="todayBtn" type="button" aria-label="今日へ">今日</button>
+          <button id="nextBtn" type="button" aria-label="次の月へ">→</button>
         </div>
         <div id="monthYear" class="month-year" aria-live="polite"></div>
       </header>
 
-      <section class="calendar" aria-label="月表示カレンダー">
+      <section class="calendar" role="region" aria-label="カレンダー">
         <div class="weekdays">
           <div role="columnheader" aria-label="日曜日">日</div>
           <div role="columnheader" aria-label="月曜日">月</div>
@@ -40,3 +40,11 @@
     </div>
   </body>
 </html>
+
+
+
+
+
+
+
+
